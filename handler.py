@@ -49,7 +49,7 @@ def ensure_model() -> str:
 def start_llama_server(model_path: str):
     """Launch llama-server and block until it reports healthy."""
     cmd = [
-        "/opt/llama/bin/llama-server",
+        "llama-server",
         "-m", model_path,
         "--port", str(LLAMA_PORT),
         "-ngl", str(N_GPU_LAYERS),

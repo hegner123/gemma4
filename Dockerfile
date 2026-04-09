@@ -1,39 +1,8 @@
-# ---------------------------------------------------------------
-# Stage 1: Build llama.cpp with CUDA support
-# ---------------------------------------------------------------
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS builder
+FROM ghcr.io/ggml-org/llama.cpp:server-cuda
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        cmake git build-essential libcurl4-openssl-dev \
+        python3 python3-pip \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
-
-ARG LLAMA_CPP_REF=master
-RUN git clone --depth 1 --branch ${LLAMA_CPP_REF} \
-        https://github.com/ggml-org/llama.cpp.git
-
-WORKDIR /build/llama.cpp
-RUN cmake -B build \
-        -DGGML_CUDA=ON \
-        -DLLAMA_CURL=OFF \
-        -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build --target llama-server -j"$(nproc)" \
-    && cmake --install build --prefix /opt/llama
-
-# ---------------------------------------------------------------
-# Stage 2: Runtime (no model baked in, downloads at boot)
-# ---------------------------------------------------------------
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip libcurl4 libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# llama-server binary and libraries
-COPY --from=builder /opt/llama /opt/llama
-ENV PATH="/opt/llama/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/opt/llama/lib:${LD_LIBRARY_PATH}"
 
 WORKDIR /app
 
