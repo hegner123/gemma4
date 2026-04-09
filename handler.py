@@ -100,43 +100,40 @@ print("Initializing llama-server...")
 server_proc = start_llama_server(model_path)
 
 
-def handler(job):
-    """
-    Process a single inference request.
-
-    Expected input format (OpenAI-compatible):
-    {
-        "messages": [{"role": "user", "content": "Hello"}],
-        "max_tokens": 512,
-        "temperature": 0.7,
-        "stream": false,
-        "endpoint": "/v1/chat/completions"  // optional override
-    }
-
-    The "endpoint" field is stripped before forwarding.
-    Supported endpoints:
-        /v1/chat/completions  (default)
-        /v1/completions
-        /v1/embeddings
-    """
-    job_input = job["input"]
-
+def _forward(job_input):
+    """Send request to llama-server and return the response object."""
     endpoint = job_input.pop("endpoint", "/v1/chat/completions")
     stream = job_input.get("stream", False)
 
+    resp = requests.post(
+        f"{BASE_URL}{endpoint}",
+        json=job_input,
+        stream=stream,
+        timeout=300,
+    )
+    resp.raise_for_status()
+    return resp, stream
+
+
+def handler(job):
+    """Sync handler for non-streaming requests."""
+    job_input = job["input"]
     try:
-        resp = requests.post(
-            f"{BASE_URL}{endpoint}",
-            json=job_input,
-            stream=stream,
-            timeout=300,
-        )
-        resp.raise_for_status()
+        resp, _ = _forward(job_input)
+        return resp.json()
     except requests.RequestException as e:
         return {"error": str(e)}
 
-    if not stream:
-        return resp.json()
+
+def stream_handler(job):
+    """Streaming handler that yields SSE chunks."""
+    job_input = job["input"]
+    job_input["stream"] = True
+    try:
+        resp, _ = _forward(job_input)
+    except requests.RequestException as e:
+        yield {"error": str(e)}
+        return
 
     for line in resp.iter_lines(decode_unicode=True):
         if not line or not line.startswith("data: "):
