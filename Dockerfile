@@ -1,10 +1,15 @@
 FROM ghcr.io/ggml-org/llama.cpp:server-cuda
 
+# Reset the entrypoint so we control startup from handler.py
+ENTRYPOINT []
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+ENV LD_LIBRARY_PATH="/app:${LD_LIBRARY_PATH}"
 
 RUN pip install --no-cache-dir --break-system-packages \
         runpod requests huggingface-hub
