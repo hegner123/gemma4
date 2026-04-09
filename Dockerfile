@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir --break-system-packages \
 COPY handler.py /app/handler.py
 
 # Model config (override via RunPod environment variables)
-# MODEL_DIR should point to a RunPod network volume for caching
 ENV HF_HUB_ENABLE_HF_TRANSFER=0
+ENV HF_HUB_DISABLE_XET=1
 ENV MODEL_REPO=ggml-org/gemma-4-26B-A4B-it-GGUF
 ENV MODEL_FILE=gemma-4-26B-A4B-it-Q4_K_M.gguf
 ENV MODEL_DIR=/runpod-volume/models
