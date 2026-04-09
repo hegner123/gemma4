@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.egg
+.eggs/
+
+# Environment
+.env
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+__MACOSX
+.fseventsd

@@ -1,0 +1,13 @@
+{
+    "input": {
+        "messages": [
+            {
+                "role": "user",
+                "content": "Explain the theory of relativity in three sentences."
+            }
+        ],
+        "max_tokens": 256,
+        "temperature": 0.7,
+        "stream": false
+    }
+}
